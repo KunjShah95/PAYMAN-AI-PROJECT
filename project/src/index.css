@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 
+  Note: Ensure that you have Tailwind CSS properly installed and configured in your project.
+  If you are seeing warnings, it could be due to:
+  1. Missing Tailwind CSS installation: Make sure you have installed Tailwind CSS via npm or yarn.
+  2. Incorrect configuration: Check your tailwind.config.js file for proper setup.
+  3. Purge settings: Ensure your purge settings in tailwind.config.js are correctly set to remove unused styles.
+*/
+
+
+
+
+
+/* Define line-clamp utilities */
+
+@layer utilities {
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .line-clamp-4 {
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
