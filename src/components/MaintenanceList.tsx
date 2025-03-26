@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { maintenanceRequests, properties, tenants } from '../services/mockData';
 import StatusBadge from './utils/StatusBadge';
+import { useTheme } from '../context/ThemeContext';
 
 const MaintenanceList: React.FC = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -38,15 +41,19 @@ const MaintenanceList: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="p-4 border-b">
-        <h2 className="text-xl font-bold">Maintenance Requests</h2>
+    <div className={`rounded-lg shadow-md overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+        <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Maintenance Requests</h2>
         <div className="mt-3 flex flex-col sm:flex-row gap-2">
           <div className="flex-grow">
             <input
               type="text"
               placeholder="Search requests..."
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className={`w-full p-2 border rounded-md ${
+                isDark 
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              }`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -55,7 +62,11 @@ const MaintenanceList: React.FC = () => {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className={`w-full p-2 border rounded-md ${
+                isDark 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
             >
               <option value="all">All Priorities</option>
               <option value="low">Low</option>
@@ -68,7 +79,11 @@ const MaintenanceList: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className={`w-full p-2 border rounded-md ${
+                isDark 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
             >
               <option value="all">All Statuses</option>
               <option value="new">New</option>
@@ -82,53 +97,53 @@ const MaintenanceList: React.FC = () => {
       </div>
       
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className={`min-w-full divide-y ${isDark ? 'divide-gray-700' : 'divide-gray-200'}`}>
+          <thead className={isDark ? 'bg-gray-700' : 'bg-gray-50'}>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                 Request
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                 Property/Unit
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                 Tenant
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                 Priority
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                 Created
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-right text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className={`divide-y ${isDark ? 'divide-gray-700 bg-gray-800' : 'divide-gray-200 bg-white'}`}>
             {filteredRequests.length > 0 ? (
               filteredRequests.map((request) => (
-                <tr key={request.id} className="hover:bg-gray-50">
+                <tr key={request.id} className={isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {request.title}
                     </div>
-                    <div className="text-sm text-gray-500 line-clamp-2">
+                    <div className={`text-sm line-clamp-2 ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                       {request.description}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {getPropertyName(request.propertyId)}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                       Unit {request.unit}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                     {getTenantName(request.tenantId)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -144,14 +159,14 @@ const MaintenanceList: React.FC = () => {
                       className="capitalize"
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                     {formatDate(request.createdAt)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">
+                    <button className={`mr-3 ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-900'}`}>
                       View
                     </button>
-                    <button className="text-green-600 hover:text-green-900">
+                    <button className={isDark ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-900'}>
                       Update
                     </button>
                   </td>
@@ -159,7 +174,7 @@ const MaintenanceList: React.FC = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={7} className={`px-6 py-4 text-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   No maintenance requests found matching your criteria.
                 </td>
               </tr>

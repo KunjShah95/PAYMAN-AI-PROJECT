@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 interface PaymentAgentProps {
   apiKey: string;
@@ -6,6 +7,8 @@ interface PaymentAgentProps {
 }
 
 const PaymentAgent = ({ apiKey, onPaymentAction }: PaymentAgentProps) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [agent, setAgent] = useState<any | null>(null);
   const [userInput, setUserInput] = useState('');
   const [result, setResult] = useState<any>(null);
@@ -105,12 +108,12 @@ const PaymentAgent = ({ apiKey, onPaymentAction }: PaymentAgentProps) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">Payment Assistant</h2>
+    <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+      <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Payment Assistant</h2>
       
       <form onSubmit={handleProcessRequest} className="mb-4">
         <div className="mb-4">
-          <label htmlFor="userInput" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="userInput" className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
             Payment Request
           </label>
           <textarea
@@ -119,7 +122,11 @@ const PaymentAgent = ({ apiKey, onPaymentAction }: PaymentAgentProps) => {
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
             rows={3}
             placeholder="Describe payment action or query (e.g., Calculate late fee for $1000 payment that is 5 days late)"
             disabled={isProcessing || !isInitialized}
@@ -137,9 +144,9 @@ const PaymentAgent = ({ apiKey, onPaymentAction }: PaymentAgentProps) => {
       
       {result && (
         <div className="mt-4">
-          <h3 className="font-medium text-gray-700 mb-2">Result:</h3>
-          <div className="p-3 bg-gray-50 rounded-md">
-            <pre className="whitespace-pre-wrap break-words">
+          <h3 className={`font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Result:</h3>
+          <div className={`p-3 rounded-md ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <pre className={`whitespace-pre-wrap break-words ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
               {typeof result === 'object' ? JSON.stringify(result, null, 2) : result}
             </pre>
           </div>

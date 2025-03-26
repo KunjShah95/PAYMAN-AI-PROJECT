@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 interface AIAgentProps {
   apiKey: string;
@@ -6,6 +7,8 @@ interface AIAgentProps {
 }
 
 const AIAgent = ({ apiKey, onResponse }: AIAgentProps) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [agent, setAgent] = useState<any | null>(null);
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState('');
@@ -112,12 +115,12 @@ const AIAgent = ({ apiKey, onResponse }: AIAgentProps) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">AI Assistant</h2>
+    <div className={`p-6 rounded-lg shadow-md ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+      <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>AI Assistant</h2>
       
       <form onSubmit={handleSubmit} className="mb-4">
         <div className="mb-4">
-          <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="prompt" className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
             Ask a question
           </label>
           <textarea
@@ -126,7 +129,11 @@ const AIAgent = ({ apiKey, onResponse }: AIAgentProps) => {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
             rows={3}
             placeholder="Ask about payments, tenants, or property management... (try 'help')"
             disabled={isLoading || !isInitialized}
@@ -144,8 +151,8 @@ const AIAgent = ({ apiKey, onResponse }: AIAgentProps) => {
       
       {response && (
         <div className="mt-4">
-          <h3 className="font-medium text-gray-700 mb-2">Response:</h3>
-          <div className="p-3 bg-gray-50 rounded-md whitespace-pre-wrap">
+          <h3 className={`font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Response:</h3>
+          <div className={`p-3 rounded-md whitespace-pre-wrap ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-50 text-gray-800'}`}>
             {response}
           </div>
         </div>
