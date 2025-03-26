@@ -190,7 +190,9 @@ const Documentation: React.FC = () => {
               <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{section.title}</h2>
             </div>
             <div 
-              className={`prose prose-slate dark:prose-invert max-w-none`}
+              className={`prose prose-slate dark:prose-invert max-w-none ${
+                isDark ? 'text-gray-200' : 'text-gray-700'
+              } prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-code:text-blue-400`}
               dangerouslySetInnerHTML={{ __html: section.content }}
             />
           </div>

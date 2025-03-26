@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { DollarSign, Calendar, User, CreditCard } from 'lucide-react';
+import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { tenants } from '../services/mockData';
+import { CreditCard, Building2, FileText, Wallet } from 'lucide-react';
+
+interface Payment {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  amount: number;
+  date: string;
+  method: 'creditCard' | 'bankTransfer' | 'check' | 'cash';
+  description: string;
+  status: 'pending' | 'completed' | 'failed' | 'overdue' | 'paid';
+}
 
 interface PaymentFormProps {
-  onSubmit: (payment: {
-    tenantId: string;
-    tenantName: string;
-    amount: number;
-    date: string;
-    method: 'creditCard' | 'bankTransfer' | 'check' | 'cash';
-    description: string;
-  }) => void;
+  onSubmit: (payment: Omit<Payment, 'id' | 'status'>) => void;
   isCompact?: boolean;
   onViewAllPayments?: () => void;
 }
@@ -20,213 +23,215 @@ function PaymentForm({ onSubmit, isCompact = false, onViewAllPayments }: Payment
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [tenantId, setTenantId] = useState('');
+  const [tenantName, setTenantName] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
-  const [method, setMethod] = useState<'creditCard' | 'bankTransfer' | 'check' | 'cash'>('creditCard');
+  const [method, setMethod] = useState<Payment['method']>('creditCard');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Initialize date to today when component mounts
-  useEffect(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    setDate(`${year}-${month}-${day}`);
-  }, []);
-
-  const selectedTenant = tenants.find(tenant => tenant.id === tenantId);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!tenantId || !amount || !date) {
-      return; // Don't submit if required fields are missing
-    }
-    
+    setError('');
     setIsSubmitting(true);
-    
+
     try {
+      if (!tenantId || !tenantName || !amount || !date) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
+      const paymentAmount = parseFloat(amount);
+      if (isNaN(paymentAmount) || paymentAmount <= 0) {
+        setError('Please enter a valid amount');
+        return;
+      }
+
       await onSubmit({
         tenantId,
-        tenantName: selectedTenant?.name || "",
-        amount: parseFloat(amount),
+        tenantName,
+        amount: paymentAmount,
         date,
         method,
-        description: description || `Rent payment for ${selectedTenant?.name || "tenant"}`
+        description: description || `Payment for ${tenantName}`
       });
-      
+
       // Reset form
       setTenantId('');
+      setTenantName('');
       setAmount('');
-      // Keep the current date
+      setDate('');
       setMethod('creditCard');
       setDescription('');
-    } catch (error) {
-      console.error('Error submitting payment:', error);
+    } catch (err) {
+      setError('Failed to submit payment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const formTitle = isCompact ? "Quick Payment" : "Record Payment";
+  const getMethodIcon = (method: Payment['method']) => {
+    switch (method) {
+      case 'creditCard':
+        return <CreditCard className="w-5 h-5" />;
+      case 'bankTransfer':
+        return <Building2 className="w-5 h-5" />;
+      case 'check':
+        return <FileText className="w-5 h-5" />;
+      case 'cash':
+        return <Wallet className="w-5 h-5" />;
+      default:
+        return <CreditCard className="w-5 h-5" />;
+    }
+  };
 
   return (
     <div className={`p-6 rounded-lg shadow ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
       <div className="flex justify-between items-center mb-6">
-        <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{formTitle}</h2>
+        <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+          {isCompact ? 'Quick Payment' : 'Make a Payment'}
+        </h2>
         {isCompact && onViewAllPayments && (
-          <button 
-            type="button"
+          <button
             onClick={onViewAllPayments}
-            className="inline-flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className={`text-sm font-medium ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}
           >
-            <CreditCard className="h-4 w-4 mr-1" />
-            View Payments
+            View All Payments
           </button>
         )}
       </div>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="tenantId" className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              Tenant
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className="h-5 w-5 text-gray-400" />
-              </div>
-              <select
-                id="tenantId"
-                value={tenantId}
-                onChange={(e) => {
-                  setTenantId(e.target.value);
-                  const tenant = tenants.find(t => t.id === e.target.value);
-                  if (tenant) {
-                    setAmount(tenant.rentAmount.toString());
-                  }
-                }}
-                className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                  isDark 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : 'border-gray-300 text-gray-900'
-                }`}
-                required
-              >
-                <option value="">Select a tenant</option>
-                {tenants.map(tenant => (
-                  <option key={tenant.id} value={tenant.id}>
-                    {tenant.name} - Unit {tenant.unit}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
 
-          <div>
-            <label htmlFor="amount" className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              Amount
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <DollarSign className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="number"
-                id="amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                  isDark 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                    : 'border-gray-300 text-gray-900'
-                }`}
-                placeholder="Enter amount"
-                min="0"
-                step="0.01"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="date" className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              Payment Date
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Calendar className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="date"
-                id="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                  isDark 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : 'border-gray-300 text-gray-900'
-                }`}
-                required
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label htmlFor="method" className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              Payment Method
-            </label>
-            <select
-              id="method"
-              value={method}
-              onChange={(e) => setMethod(e.target.value as 'creditCard' | 'bankTransfer' | 'check' | 'cash')}
-              className={`block w-full py-2 px-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                isDark 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'border-gray-300 text-gray-900'
-              }`}
-              required
-            >
-              <option value="creditCard">Credit Card</option>
-              <option value="bankTransfer">Bank Transfer</option>
-              <option value="check">Check</option>
-              <option value="cash">Cash</option>
-            </select>
-          </div>
-          
-          {!isCompact && (
-            <div>
-              <label htmlFor="description" className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                Description
-              </label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className={`block w-full py-2 px-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                  isDark 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                    : 'border-gray-300 text-gray-900'
-                }`}
-                placeholder="e.g. June 2024 Rent"
-                rows={3}
-              ></textarea>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isSubmitting || !tenantId || !amount || !date}
-            className={`w-full py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-              isSubmitting || !tenantId || !amount || !date
-                ? `${isDark ? 'bg-gray-600' : 'bg-gray-300'} text-gray-400 cursor-not-allowed`
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            Tenant ID
+          </label>
+          <input
+            type="text"
+            value={tenantId}
+            onChange={(e) => setTenantId(e.target.value)}
+            className={`w-full px-3 py-2 rounded-md border ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
             }`}
-          >
-            {isSubmitting ? 'Processing...' : 'Record Payment'}
-          </button>
+            required
+          />
         </div>
+
+        <div>
+          <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            Tenant Name
+          </label>
+          <input
+            type="text"
+            value={tenantName}
+            onChange={(e) => setTenantName(e.target.value)}
+            className={`w-full px-3 py-2 rounded-md border ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
+            required
+          />
+        </div>
+
+        <div>
+          <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            Amount
+          </label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className={`w-full px-3 py-2 rounded-md border ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
+            min="0"
+            step="0.01"
+            required
+          />
+        </div>
+
+        <div>
+          <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            Date
+          </label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className={`w-full px-3 py-2 rounded-md border ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
+            required
+          />
+        </div>
+
+        <div>
+          <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            Payment Method
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {(['creditCard', 'bankTransfer', 'check', 'cash'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMethod(m)}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-md border ${
+                  method === m
+                    ? isDark
+                      ? 'bg-blue-600 border-blue-500 text-white'
+                      : 'bg-blue-50 border-blue-500 text-blue-700'
+                    : isDark
+                      ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {getMethodIcon(m)}
+                <span className="capitalize">{m.replace(/([A-Z])/g, ' $1').trim()}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+            Description (Optional)
+          </label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className={`w-full px-3 py-2 rounded-md border ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
+            placeholder="Enter payment description"
+          />
+        </div>
+
+        {error && (
+          <div className="text-red-500 text-sm">{error}</div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={`w-full py-2 px-4 rounded-md text-white font-medium ${
+            isSubmitting
+              ? 'bg-blue-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+        >
+          {isSubmitting ? 'Processing...' : 'Submit Payment'}
+        </button>
       </form>
     </div>
   );

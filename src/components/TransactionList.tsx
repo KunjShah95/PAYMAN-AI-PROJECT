@@ -1,41 +1,41 @@
 import React, { useState } from 'react';
-import { payments, tenants } from '../services/mockData';
+import { tenants } from '../services/mockData';
 import AddTransactionForm from './forms/AddTransactionForm';
 import DataExport from './utils/DataExport';
 import { useTheme } from '../context/ThemeContext';
-import { Plus, FileText, CreditCard, ArrowLeft } from 'lucide-react';
+import { Plus, FileText, CreditCard, ArrowLeft, ArrowUpRight, ArrowDownLeft, Calendar, Wallet, Building2 } from 'lucide-react';
 import PaymentForm from './PaymentForm';
 import { createRoot } from 'react-dom/client';
 
-// Define the Payment type to match the mockData interface
 interface Payment {
   id: string;
   tenantId: string;
+  tenantName: string;
   amount: number;
   date: string;
-  status: 'paid' | 'pending' | 'failed' | 'overdue';
   method: 'creditCard' | 'bankTransfer' | 'check' | 'cash';
   description: string;
+  status: 'pending' | 'completed' | 'failed' | 'overdue' | 'paid';
 }
 
 interface TransactionListProps {
+  payments: Payment[];
   onNavigateToPayments?: () => void;
 }
 
-const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments }) => {
+const TransactionList: React.FC<TransactionListProps> = ({ payments, onNavigateToPayments }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
-  const [localPayments, setLocalPayments] = useState<Payment[]>([...payments]);
+  const [localPayments, setLocalPayments] = useState<Payment[]>(payments);
 
   // Filter payments based on search and status filter
   const filteredPayments = localPayments.filter(payment => {
-    const tenant = tenants.find(t => t.id === payment.tenantId);
     const matchesSearch = 
-      (tenant?.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      payment.tenantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.date.includes(searchTerm) ||
       payment.amount.toString().includes(searchTerm);
@@ -53,12 +53,6 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
     }).format(amount);
   };
 
-  // Get tenant name by ID
-  const getTenantName = (tenantId: string) => {
-    const tenant = tenants.find(t => t.id === tenantId);
-    return tenant ? tenant.name : 'Unknown Tenant';
-  };
-
   // Format date
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -66,7 +60,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
   };
 
   // Get status badge style
-  const getStatusBadgeClass = (status: string) => {
+  const getStatusBadgeClass = (status: Payment['status']) => {
     switch(status) {
       case 'paid':
         return isDark 
@@ -84,6 +78,10 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
         return isDark
           ? 'bg-orange-900 text-orange-100 border-orange-700'
           : 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'completed':
+        return isDark
+          ? 'bg-blue-900 text-blue-100 border-blue-700'
+          : 'bg-blue-100 text-blue-800 border-blue-300';
       default:
         return isDark
           ? 'bg-gray-800 text-gray-200 border-gray-600'
@@ -92,9 +90,9 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
   };
 
   // Handle adding a new transaction
-  const handleAddTransaction = (data: any) => {
+  const handleAddTransaction = (data: Omit<Payment, 'id' | 'status'>) => {
     try {
-      if (!data.tenantId || !data.amount || !data.date || !data.status || !data.method) {
+      if (!data.tenantId || !data.amount || !data.date || !data.method) {
         console.error('Missing required fields for transaction');
         return;
       }
@@ -102,10 +100,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
       const newTransaction: Payment = {
         id: `pay${Date.now()}`,
         tenantId: data.tenantId,
-        amount: parseFloat(data.amount),
+        tenantName: data.tenantName,
+        amount: data.amount,
         date: data.date,
-        status: data.status as 'paid' | 'pending' | 'failed' | 'overdue',
-        method: data.method as 'creditCard' | 'bankTransfer' | 'check' | 'cash',
+        status: 'pending',
+        method: data.method,
         description: data.description || 'Transaction'
       };
       
@@ -117,7 +116,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
   };
 
   // Handle payment submission
-  const handlePaymentSubmit = (payment: any) => {
+  const handlePaymentSubmit = (payment: Omit<Payment, 'id' | 'status'>) => {
     try {
       if (!payment.tenantId || !payment.amount || !payment.date) {
         console.error('Missing required fields for payment');
@@ -127,11 +126,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
       const newPayment: Payment = {
         id: `pay${Date.now()}`,
         tenantId: payment.tenantId,
+        tenantName: payment.tenantName,
         amount: payment.amount,
         date: payment.date,
-        status: 'paid',
-        method: payment.method as 'creditCard' | 'bankTransfer' | 'check' | 'cash',
-        description: payment.description || `Rent payment for ${payment.tenantName || 'tenant'}`
+        status: 'completed',
+        method: payment.method,
+        description: payment.description || `Payment for ${payment.tenantName}`
       };
       
       setLocalPayments(prev => [newPayment, ...prev]);
@@ -143,13 +143,28 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
 
   // Prepare data for export
   const exportData = filteredPayments.map(payment => ({
-    Tenant: getTenantName(payment.tenantId),
+    Tenant: payment.tenantName,
     Amount: payment.amount,
     Date: formatDate(payment.date),
     Status: payment.status,
     Method: payment.method.replace(/([A-Z])/g, ' $1').trim(),
     Description: payment.description
   }));
+
+  const getMethodIcon = (method: Payment['method']) => {
+    switch (method) {
+      case 'creditCard':
+        return <CreditCard className="w-5 h-5" />;
+      case 'bankTransfer':
+        return <Building2 className="w-5 h-5" />;
+      case 'check':
+        return <FileText className="w-5 h-5" />;
+      case 'cash':
+        return <Wallet className="w-5 h-5" />;
+      default:
+        return <CreditCard className="w-5 h-5" />;
+    }
+  };
 
   if (isAddingPayment) {
     return (
@@ -219,7 +234,6 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
             {filteredPayments.length > 0 && (
               <button
                 onClick={() => {
-                  // Create a modal or popup to show the DataExport component
                   const modal = document.createElement('div');
                   modal.style.position = 'fixed';
                   modal.style.top = '0';
@@ -305,6 +319,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
               <option value="pending">Pending</option>
               <option value="failed">Failed</option>
               <option value="overdue">Overdue</option>
+              <option value="completed">Completed</option>
             </select>
           </div>
         </div>
@@ -343,7 +358,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onNavigateToPayments 
                 <tr key={payment.id} className={`${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {getTenantName(payment.tenantId)}
+                      {payment.tenantName}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

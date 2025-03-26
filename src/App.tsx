@@ -20,13 +20,15 @@ interface MenuItem {
   icon: React.ComponentType;
 }
 
-interface PaymentData {
+interface Payment {
+  id: string;
   tenantId: string;
   tenantName: string;
   amount: number;
   date: string;
   method: 'creditCard' | 'bankTransfer' | 'check' | 'cash';
   description: string;
+  status: 'pending' | 'completed' | 'failed' | 'overdue' | 'paid';
 }
 
 interface ToastMessage {
@@ -42,6 +44,7 @@ function App() {
   const [isAddingTenant, setIsAddingTenant] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
 
   // Use environment variable for API key or fallback to a placeholder
   const PAYMAN_API_KEY = import.meta.env.VITE_PAYMAN_API_KEY || 'your_payman_api_key';
@@ -68,21 +71,23 @@ function App() {
     }, 5000);
   }, []);
 
-  const handlePaymentSubmit = async (payment: PaymentData) => {
+  const handlePaymentSubmit = async (payment: Omit<Payment, 'id' | 'status'>) => {
     setIsLoading(true);
     try {
-      // Simulate API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // TODO: Replace with actual API call in production
-      console.log('Payment submitted:', payment);
+      const newPayment: Payment = {
+        ...payment,
+        id: `pay${Date.now()}`,
+        status: 'completed'
+      };
       
+      setPayments(prev => [newPayment, ...prev]);
       showToast('success', `Payment of $${payment.amount} recorded for ${payment.tenantName}`);
-      return true;
     } catch (error) {
-      console.error('Error submitting payment:', error);
       showToast('error', 'Failed to process payment. Please try again.');
-      throw error;
+      console.error('Error processing payment:', error);
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +112,7 @@ function App() {
           <div className="flex flex-col gap-6">
             <div className="flex flex-col lg:flex-row gap-6 w-full">
               <div className="flex-grow">
-                <Dashboard />
+                <Dashboard payments={payments} />
               </div>
               <div className="lg:w-1/3">
                 <PaymentForm 
@@ -156,15 +161,24 @@ function App() {
         return <MaintenanceList />;
       
       case 'transactions':
-        return <TransactionList onNavigateToPayments={() => setActiveView('payments')} />;
+        return <TransactionList payments={payments} onNavigateToPayments={() => setActiveView('payments')} />;
 
       case 'payments':
         return (
-          <div className={`p-6 rounded-lg shadow ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="max-w-lg mx-auto">
-              <h1 className={`text-2xl font-bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Record New Payment</h1>
-              <PaymentForm onSubmit={handlePaymentSubmit} />
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h1 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Payments</h1>
+              <button
+                onClick={() => setActiveView('dashboard')}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Make Payment
+              </button>
             </div>
+            <TransactionList 
+              onNavigateToPayments={() => setActiveView('payments')} 
+              payments={payments}
+            />
           </div>
         );
 
@@ -220,7 +234,7 @@ function App() {
     <div className={`flex h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Sidebar menuItems={menuItems} activeView={activeView} setActiveView={setActiveView} />
       <main className="flex-1 overflow-y-auto relative">
-        <div className="p-6">
+        <div className="p-4 lg:p-6">
           {renderContent()}
         </div>
 
