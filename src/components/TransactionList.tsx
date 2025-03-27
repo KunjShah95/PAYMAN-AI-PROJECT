@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { tenants } from '../services/mockData';
 import AddTransactionForm from './forms/AddTransactionForm';
 import DataExport from './utils/DataExport';
 import { useTheme } from '../context/ThemeContext';
-import { Plus, FileText, CreditCard, ArrowLeft, ArrowUpRight, ArrowDownLeft, Calendar, Wallet, Building2 } from 'lucide-react';
+import { Plus, FileText, CreditCard, ArrowLeft, Wallet, Building2 } from 'lucide-react';
 import PaymentForm from './PaymentForm';
 import { createRoot } from 'react-dom/client';
 

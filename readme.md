@@ -147,3 +147,66 @@ For questions or support:
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+## AI Features
+
+The system includes several AI-powered features:
+
+### Tenant Health Score
+- Calculates financial reliability scores based on payment patterns
+- Provides risk assessment and actionable recommendations
+- Visualizes payment trends and history
+
+### Auto-Reconciliation Engine
+- Matches incoming payments to tenants using AI pattern recognition
+- Reduces manual reconciliation workload
+- Provides confidence scores and reasoning for matches
+
+### Smart Notification System
+- Generates timely alerts based on property and tenant events
+- Prioritizes notifications by urgency and relevance
+- Provides actionable next steps for each notification
+
+### Property Allocation Engine
+- Matches tenants with available properties based on preferences
+- Calculates compatibility scores for tenant-property pairs
+- Provides manual and automatic matching capabilities
+
+## Documentation
+
+Comprehensive documentation is available in the `/docs` directory:
+
+- [AI Features Guide](docs/ai-features-guide.md)
+- [Analytics Setup](docs/analytics-setup.md)
+- [System Guide](docs/system-guide.md)
+
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+## Environment Variables
+
+Create a `.env` file with the following variables:
+
+```
+VITE_GOOGLE_ANALYTICS_ID=your-ga4-id
+VITE_PAYMAN_API_KEY=your-api-key
+```
+
+## Technology Stack
+
+- React with TypeScript
+- Vite for fast development
+- TailwindCSS for styling
+- Lucide for icons
+- React Router for navigation
+- Vercel Analytics for usage tracking
