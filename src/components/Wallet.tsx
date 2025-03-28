@@ -48,11 +48,19 @@ const Wallet: React.FC = () => {
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [showAddCard, setShowAddCard] = useState(false);
+  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   const [transferAmount, setTransferAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [addFundsAmount, setAddFundsAmount] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('creditCard');
   const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState('bankAccount');
+  const [cardDetails, setCardDetails] = useState({
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    cardHolderName: '',
+  });
 
   // Initialize wallet state
   const [walletState, setWalletState] = useState<WalletState>({
@@ -240,6 +248,19 @@ const Wallet: React.FC = () => {
     }
   };
 
+  const handleAddCard = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Here you would typically make an API call to save the card details
+    console.log('Card details:', cardDetails);
+    setShowAddCard(false);
+    setCardDetails({
+      cardNumber: '',
+      expiryDate: '',
+      cvv: '',
+      cardHolderName: '',
+    });
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -312,15 +333,21 @@ const Wallet: React.FC = () => {
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className={`p-4 rounded-lg flex items-center justify-center ${
-            isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
-          }`}>
+          <button 
+            onClick={() => setShowAddCard(true)}
+            className={`p-4 rounded-lg flex items-center justify-center ${
+              isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
+            }`}
+          >
             <CreditCard className={`w-6 h-6 mr-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
             <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Add Card</span>
           </button>
-          <button className={`p-4 rounded-lg flex items-center justify-center ${
-            isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
-          }`}>
+          <button 
+            onClick={() => setShowTransactionHistory(true)}
+            className={`p-4 rounded-lg flex items-center justify-center ${
+              isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
+            }`}
+          >
             <History className={`w-6 h-6 mr-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
             <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>Transaction History</span>
           </button>
@@ -559,6 +586,160 @@ const Wallet: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Card Modal */}
+      {showAddCard && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} w-full max-w-md`}>
+            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Add New Card
+            </h2>
+            <form onSubmit={handleAddCard} className="space-y-4">
+              <div>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Card Number
+                </label>
+                <input
+                  type="text"
+                  value={cardDetails.cardNumber}
+                  onChange={(e) => setCardDetails({ ...cardDetails, cardNumber: e.target.value })}
+                  className={`mt-1 block w-full rounded-md ${
+                    isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                  } border focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="1234 5678 9012 3456"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Expiry Date
+                  </label>
+                  <input
+                    type="text"
+                    value={cardDetails.expiryDate}
+                    onChange={(e) => setCardDetails({ ...cardDetails, expiryDate: e.target.value })}
+                    className={`mt-1 block w-full rounded-md ${
+                      isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    } border focus:ring-blue-500 focus:border-blue-500`}
+                    placeholder="MM/YY"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    CVV
+                  </label>
+                  <input
+                    type="text"
+                    value={cardDetails.cvv}
+                    onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
+                    className={`mt-1 block w-full rounded-md ${
+                      isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    } border focus:ring-blue-500 focus:border-blue-500`}
+                    placeholder="123"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Card Holder Name
+                </label>
+                <input
+                  type="text"
+                  value={cardDetails.cardHolderName}
+                  onChange={(e) => setCardDetails({ ...cardDetails, cardHolderName: e.target.value })}
+                  className={`mt-1 block w-full rounded-md ${
+                    isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                  } border focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAddCard(false)}
+                  className={`px-4 py-2 rounded-md ${
+                    isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Add Card
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction History Modal */}
+      {showTransactionHistory && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} w-full max-w-2xl max-h-[80vh] overflow-y-auto`}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Transaction History
+              </h2>
+              <button
+                onClick={() => setShowTransactionHistory(false)}
+                className={`p-2 rounded-full ${
+                  isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              {walletState.transactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className={`flex items-center justify-between p-4 rounded-lg ${
+                    isDark ? 'bg-gray-700' : 'bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    {getTransactionIcon(transaction.type)}
+                    <div className="ml-4">
+                      <p className={isDark ? 'text-white' : 'text-gray-900'}>
+                        {transaction.description}
+                      </p>
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {formatDate(transaction.date)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-semibold ${
+                      transaction.type === 'deposit' ? 'text-green-500' :
+                      transaction.type === 'withdrawal' ? 'text-red-500' :
+                      'text-blue-500'
+                    }`}>
+                      {transaction.type === 'deposit' ? '+' : '-'}
+                      {formatCurrency(transaction.amount)}
+                    </p>
+                    <p className={`text-sm ${
+                      transaction.status === 'completed' ? 'text-green-500' :
+                      transaction.status === 'pending' ? 'text-yellow-500' :
+                      'text-red-500'
+                    }`}>
+                      {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
