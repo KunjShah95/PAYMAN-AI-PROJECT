@@ -61,6 +61,11 @@ function AppContent() {
     setIsSidebarOpen(prev => !prev);
   };
 
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location]);
+
   const showToast = useCallback((type: 'success' | 'error' | 'info', message: string) => {
     const id = Date.now().toString();
     setPayments(prev => [...prev, { id, type, message, status: 'pending', method: 'creditCard', description: '', amount: 0, tenantId: '', date: '' }]);
@@ -138,9 +143,19 @@ function AppContent() {
 
   return (
     <div className={`min-h-screen flex ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={toggleSidebar}
+        className={`fixed top-4 left-4 z-50 lg:hidden p-2 rounded-md ${
+          isDark ? 'bg-gray-800' : 'bg-white'
+        } shadow-lg`}
+      >
+        <Menu className={`w-6 h-6 ${isDark ? 'text-white' : 'text-gray-900'}`} />
+      </button>
+
       {/* Sidebar */}
       <div 
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 lg:static lg:inset-auto lg:w-64 ${
           isDark ? 'bg-gray-800' : 'bg-white'
@@ -168,7 +183,7 @@ function AppContent() {
                       } ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                       onClick={() => {
                         Analytics.trackEvent('navigation', { destination: item.id });
-                        setIsSidebarOpen(false);
+                        setIsSidebarOpen(false); // Close sidebar on mobile when clicking a link
                       }}
                     >
                       <Icon className="h-5 w-5 mr-3" />
@@ -198,6 +213,7 @@ function AppContent() {
                     className={`flex items-center px-4 py-2 rounded-md ${
                       location.pathname === '/settings' ? (isDark ? 'bg-gray-700' : 'bg-blue-50') : ''
                     } ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                    onClick={() => setIsSidebarOpen(false)}
                   >
                     <SettingsIcon className="h-5 w-5 mr-3" />
                     Settings
@@ -209,6 +225,7 @@ function AppContent() {
                     className={`flex items-center px-4 py-2 rounded-md ${
                       location.pathname === '/profile' ? (isDark ? 'bg-gray-700' : 'bg-blue-50') : ''
                     } ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                    onClick={() => setIsSidebarOpen(false)}
                   >
                     <User className="h-5 w-5 mr-3" />
                     Profile
@@ -219,6 +236,14 @@ function AppContent() {
           </nav>
         </div>
       </div>
+
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content */}
       <div className="flex-1 overflow-x-hidden overflow-y-auto">
