@@ -21,6 +21,37 @@ export interface Tenant {
   leaseStart: string;
   leaseEnd: string;
   rentAmount: number;
+  wallet: {
+    balance: number;
+    lastSweepDate: string;
+    pendingTransactions: {
+      id: string;
+      amount: number;
+      type: 'rent' | 'deposit' | 'fee' | 'refund';
+      status: 'pending' | 'completed' | 'failed';
+      dueDate: string;
+    }[];
+  };
+  paymentHistory: {
+    onTime: number;
+    late: number;
+    missed: number;
+    lastPaymentDate: string;
+    lastPaymentAmount: number;
+  };
+  propertyDetails: {
+    propertyId: string;
+    propertyName: string;
+    propertyType: 'apartment' | 'house' | 'condo';
+    propertyManager: string;
+    landlordId: string;
+    landlordName: string;
+    landlordBankAccount: {
+      accountNumber: string;
+      routingNumber: string;
+      bankName: string;
+    };
+  };
 }
 
 export interface Payment {
@@ -107,7 +138,32 @@ export const tenants: Tenant[] = [
     status: 'current',
     leaseStart: '2023-01-01',
     leaseEnd: '2024-01-01',
-    rentAmount: 1500
+    rentAmount: 1500,
+    wallet: {
+      balance: 1000,
+      lastSweepDate: '2023-05-15',
+      pendingTransactions: [],
+    },
+    paymentHistory: {
+      onTime: 100,
+      late: 0,
+      missed: 0,
+      lastPaymentDate: '2023-06-01',
+      lastPaymentAmount: 1500,
+    },
+    propertyDetails: {
+      propertyId: 'prop1',
+      propertyName: 'Sunset Apartments',
+      propertyType: 'apartment',
+      propertyManager: 'Sarah Johnson',
+      landlordId: 'landlord1',
+      landlordName: 'Landlord One',
+      landlordBankAccount: {
+        accountNumber: '123456789',
+        routingNumber: '987654321',
+        bankName: 'Bank of Sunset',
+      },
+    },
   },
   {
     id: 'ten2',
@@ -119,7 +175,32 @@ export const tenants: Tenant[] = [
     status: 'late',
     leaseStart: '2022-08-15',
     leaseEnd: '2023-08-15',
-    rentAmount: 1350
+    rentAmount: 1350,
+    wallet: {
+      balance: 900,
+      lastSweepDate: '2023-05-15',
+      pendingTransactions: [],
+    },
+    paymentHistory: {
+      onTime: 90,
+      late: 10,
+      missed: 0,
+      lastPaymentDate: '2023-06-05',
+      lastPaymentAmount: 1350,
+    },
+    propertyDetails: {
+      propertyId: 'prop1',
+      propertyName: 'Sunset Apartments',
+      propertyType: 'apartment',
+      propertyManager: 'Sarah Johnson',
+      landlordId: 'landlord1',
+      landlordName: 'Landlord One',
+      landlordBankAccount: {
+        accountNumber: '123456789',
+        routingNumber: '987654321',
+        bankName: 'Bank of Sunset',
+      },
+    },
   },
   {
     id: 'ten3',
@@ -131,7 +212,32 @@ export const tenants: Tenant[] = [
     status: 'current',
     leaseStart: '2023-03-01',
     leaseEnd: '2024-03-01',
-    rentAmount: 1450
+    rentAmount: 1450,
+    wallet: {
+      balance: 1000,
+      lastSweepDate: '2023-05-15',
+      pendingTransactions: [],
+    },
+    paymentHistory: {
+      onTime: 100,
+      late: 0,
+      missed: 0,
+      lastPaymentDate: '2023-05-30',
+      lastPaymentAmount: 1450,
+    },
+    propertyDetails: {
+      propertyId: 'prop2',
+      propertyName: 'River Heights',
+      propertyType: 'condo',
+      propertyManager: 'Lisa Brown',
+      landlordId: 'landlord2',
+      landlordName: 'Landlord Two',
+      landlordBankAccount: {
+        accountNumber: '123456789',
+        routingNumber: '987654321',
+        bankName: 'Bank of River Heights',
+      },
+    },
   },
   {
     id: 'ten4',
@@ -143,7 +249,32 @@ export const tenants: Tenant[] = [
     status: 'notice',
     leaseStart: '2022-10-01',
     leaseEnd: '2023-10-01',
-    rentAmount: 1200
+    rentAmount: 1200,
+    wallet: {
+      balance: 800,
+      lastSweepDate: '2023-05-15',
+      pendingTransactions: [],
+    },
+    paymentHistory: {
+      onTime: 80,
+      late: 20,
+      missed: 0,
+      lastPaymentDate: '2023-06-01',
+      lastPaymentAmount: 1200,
+    },
+    propertyDetails: {
+      propertyId: 'prop3',
+      propertyName: 'Mountain View Condos',
+      propertyType: 'condo',
+      propertyManager: 'Robert Wilson',
+      landlordId: 'landlord3',
+      landlordName: 'Landlord Three',
+      landlordBankAccount: {
+        accountNumber: '123456789',
+        routingNumber: '987654321',
+        bankName: 'Bank of Mountain View',
+      },
+    },
   },
   {
     id: 'ten5',
@@ -155,7 +286,32 @@ export const tenants: Tenant[] = [
     status: 'current',
     leaseStart: '2023-02-15',
     leaseEnd: '2024-02-15',
-    rentAmount: 1400
+    rentAmount: 1400,
+    wallet: {
+      balance: 1000,
+      lastSweepDate: '2023-05-15',
+      pendingTransactions: [],
+    },
+    paymentHistory: {
+      onTime: 100,
+      late: 0,
+      missed: 0,
+      lastPaymentDate: '2023-06-01',
+      lastPaymentAmount: 1400,
+    },
+    propertyDetails: {
+      propertyId: 'prop1',
+      propertyName: 'Sunset Apartments',
+      propertyType: 'apartment',
+      propertyManager: 'Sarah Johnson',
+      landlordId: 'landlord1',
+      landlordName: 'Landlord One',
+      landlordBankAccount: {
+        accountNumber: '123456789',
+        routingNumber: '987654321',
+        bankName: 'Bank of Sunset',
+      },
+    },
   },
   {
     id: 'ten6',
@@ -167,7 +323,32 @@ export const tenants: Tenant[] = [
     status: 'current',
     leaseStart: '2023-01-15',
     leaseEnd: '2024-01-15',
-    rentAmount: 1350
+    rentAmount: 1350,
+    wallet: {
+      balance: 900,
+      lastSweepDate: '2023-05-15',
+      pendingTransactions: [],
+    },
+    paymentHistory: {
+      onTime: 90,
+      late: 0,
+      missed: 0,
+      lastPaymentDate: '2023-06-02',
+      lastPaymentAmount: 1350,
+    },
+    propertyDetails: {
+      propertyId: 'prop2',
+      propertyName: 'River Heights',
+      propertyType: 'condo',
+      propertyManager: 'Lisa Brown',
+      landlordId: 'landlord2',
+      landlordName: 'Landlord Two',
+      landlordBankAccount: {
+        accountNumber: '123456789',
+        routingNumber: '987654321',
+        bankName: 'Bank of River Heights',
+      },
+    },
   },
   {
     id: 'ten7',
@@ -179,7 +360,32 @@ export const tenants: Tenant[] = [
     status: 'pending',
     leaseStart: '2023-06-01',
     leaseEnd: '2024-06-01',
-    rentAmount: 1250
+    rentAmount: 1250,
+    wallet: {
+      balance: 800,
+      lastSweepDate: '2023-05-15',
+      pendingTransactions: [],
+    },
+    paymentHistory: {
+      onTime: 80,
+      late: 20,
+      missed: 0,
+      lastPaymentDate: '2023-06-01',
+      lastPaymentAmount: 1250,
+    },
+    propertyDetails: {
+      propertyId: 'prop3',
+      propertyName: 'Mountain View Condos',
+      propertyType: 'condo',
+      propertyManager: 'Emily Davis',
+      landlordId: 'landlord3',
+      landlordName: 'Landlord Three',
+      landlordBankAccount: {
+        accountNumber: '123456789',
+        routingNumber: '987654321',
+        bankName: 'Bank of Mountain View',
+      },
+    },
   }
 ];
 

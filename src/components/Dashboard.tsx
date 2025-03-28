@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { DollarSign, Clock, AlertCircle, ChevronLeft, ChevronRight, Users, Building2, X } from 'lucide-react';
+import { DollarSign, Clock, AlertCircle, ChevronLeft, ChevronRight, Users, Building2, X, Bell, Home, Wallet } from 'lucide-react';
 import HealthScoreModule from './HealthScoreModule';
 import ReconciliationEngine from './ReconciliationEngine';
 import NotificationSystem from './NotificationSystem';
 import Analytics from './Analytics';
 import { useNavigate } from 'react-router-dom';
+import PaymentMonitoringEngine from './PaymentMonitoringEngine';
+import LandlordFundSweep from './LandlordFundSweep';
+import { tenants } from '../services/mockData';
 
 // Local interfaces
 interface DashboardPayment {
@@ -40,6 +43,17 @@ interface Property {
   maintenanceRequests?: any[];
 }
 
+interface Notification {
+  id: string;
+  type: 'late_payment' | 'upcoming_payment' | 'reconciliation_needed' | 'payment_received' | 'lease' | 'maintenance';
+  message: string;
+  severity: 'low' | 'medium' | 'high';
+  timestamp: string;
+  read?: boolean;
+  title?: string;
+  actions?: Array<{ label: string; action: string }>;
+}
+
 interface DashboardProps {
   payments: DashboardPayment[];
 }
@@ -50,6 +64,47 @@ function Dashboard({ payments }: DashboardProps) {
   const isDark = theme === 'dark';
   const [currentChart, setCurrentChart] = useState(0);
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: 'notification1',
+      type: 'lease',
+      title: 'Lease Expiring Soon: Alice Wong',
+      message: 'Lease for Alice Wong expires in 30 days on April 30, 2024. Action required.',
+      severity: 'medium',
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      read: false,
+      actions: [
+        { label: 'Contact Tenant', action: 'contact_tenant' },
+        { label: 'Prepare Renewal', action: 'prepare_renewal' }
+      ]
+    },
+    {
+      id: 'notification2',
+      type: 'late_payment',
+      title: 'Late Payment: Michael Brown',
+      message: 'Payment of $1,500 from Michael Brown is overdue since March 5, 2024.',
+      severity: 'high',
+      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+      read: false,
+      actions: [
+        { label: 'Send Reminder', action: 'send_reminder' },
+        { label: 'Call Tenant', action: 'call_tenant' }
+      ]
+    },
+    {
+      id: 'notification3',
+      type: 'maintenance',
+      title: 'Maintenance Request: Sunset Apartments',
+      message: 'New maintenance request for Sunset Apartments: "Leaking kitchen faucet". Priority: urgent.',
+      severity: 'medium',
+      timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
+      read: true,
+      actions: [
+        { label: 'Assign Vendor', action: 'assign_vendor' },
+        { label: 'View Details', action: 'view_details' }
+      ]
+    }
+  ]);
   
   // Mock tenant data for HealthScoreModule and ReconciliationEngine
   const mockTenant: Tenant = {
@@ -180,48 +235,6 @@ function Dashboard({ payments }: DashboardProps) {
       rawData: 'Zelle Transfer - Alice Wong / $950.00 / 03-30-2024'
     }
   ]);
-  
-  const [notifications, setNotifications] = useState<any[]>([
-    {
-      id: 'notification1',
-      title: 'Lease Expiring Soon: Alice Wong',
-      message: 'Lease for Alice Wong expires in 30 days on April 30, 2024. Action required.',
-      type: 'lease',
-      priority: 'medium',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      read: false,
-      actions: [
-        { label: 'Contact Tenant', action: 'contact_tenant' },
-        { label: 'Prepare Renewal', action: 'prepare_renewal' }
-      ]
-    },
-    {
-      id: 'notification2',
-      title: 'Late Payment: Michael Brown',
-      message: 'Payment of $1,500 from Michael Brown is overdue since March 5, 2024.',
-      type: 'payment',
-      priority: 'high',
-      date: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      read: false,
-      actions: [
-        { label: 'Send Reminder', action: 'send_reminder' },
-        { label: 'Call Tenant', action: 'call_tenant' }
-      ]
-    },
-    {
-      id: 'notification3',
-      title: 'Maintenance Request: Sunset Apartments',
-      message: 'New maintenance request for Sunset Apartments: "Leaking kitchen faucet". Priority: urgent.',
-      type: 'maintenance',
-      priority: 'medium',
-      date: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
-      read: true,
-      actions: [
-        { label: 'Assign Vendor', action: 'assign_vendor' },
-        { label: 'View Details', action: 'view_details' }
-      ]
-    }
-  ]);
 
   // Track dashboard view
   useEffect(() => {
@@ -303,202 +316,136 @@ function Dashboard({ payments }: DashboardProps) {
     });
   };
 
+  const handlePaymentAction = (action: {
+    type: 'late_payment' | 'upcoming_payment' | 'reconciliation_needed' | 'payment_received';
+    tenantId: string;
+    message: string;
+    severity: 'low' | 'medium' | 'high';
+  }) => {
+    setNotifications(prev => [{
+      id: Date.now().toString(),
+      ...action,
+      timestamp: new Date().toISOString(),
+      read: false
+    }, ...prev]);
+  };
+
+  const handleSweepComplete = (sweepDetails: {
+    totalAmount: number;
+    tenantCount: number;
+    timestamp: string;
+  }) => {
+    setNotifications(prev => [{
+      id: Date.now().toString(),
+      type: 'payment_received',
+      message: `Fund sweep completed: $${sweepDetails.totalAmount.toFixed(2)} from ${sweepDetails.tenantCount} tenants`,
+      severity: 'low',
+      timestamp: sweepDetails.timestamp,
+      read: false
+    }, ...prev]);
+  };
+
   return (
-    <div className="space-y-6">
-      <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Dashboard</h1>
-      
-      {/* Notifications */}
-      <div className="fixed top-4 right-4 z-50">
-        <NotificationSystem 
-          notifications={notifications}
-          onNotificationRead={(id) => {
-            setNotifications(prev => 
-              prev.map(notification => 
-                notification.id === id 
-                  ? { ...notification, read: true } 
-                  : notification
-              )
-            );
-          }}
-          onNotificationAction={handleNotificationAction}
-          onNotificationsClear={() => {
-            setNotifications([]);
-          }}
-          onNotificationDismiss={(id) => {
-            setNotifications(prev => 
-              prev.filter(notification => notification.id !== id)
-            );
-          }}
-        />
-      </div>
-      
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className={`p-6 rounded-lg shadow ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>Total Revenue</h3>
-            <DollarSign className="w-6 h-6 text-green-600" />
-          </div>
-          <p className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>${totalRevenue.toFixed(2)}</p>
-          <p className={`text-sm mt-2 ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>This month</p>
-        </div>
-
-        <div className={`p-6 rounded-lg shadow ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>Pending Payments</h3>
-            <Clock className={`w-6 h-6 ${isDark ? 'text-yellow-300' : 'text-yellow-600'}`} />
-          </div>
-          <p className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{pendingPayments}</p>
-          <p className={`text-sm mt-2 ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>payments pending</p>
-        </div>
-
-        <div className={`p-6 rounded-lg shadow ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>Overdue Payments</h3>
-            <AlertCircle className={`w-6 h-6 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
-          </div>
-          <p className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{overduePayments}</p>
-          <p className={`text-sm mt-2 ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>payments overdue</p>
-        </div>
-      </div>
-      
-      {/* AI Features Section */}
-      <div className={`rounded-lg shadow ${isDark ? 'bg-gray-800' : 'bg-white'} p-4 mb-6`}>
-        <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-          AI-Powered Tools
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div 
-            onClick={() => handleAIFeatureClick('healthScore')}
-            className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 hover:bg-gray-650' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'} cursor-pointer transition-colors duration-200`}
-          >
-            <div className="flex items-center mb-2">
-              <Users className={`w-5 h-5 mr-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
-              <h3 className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>Tenant Health Score</h3>
-            </div>
-            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              Analyze tenant payment reliability and financial health scores
-            </p>
-          </div>
-          
-          <div 
-            onClick={() => handleAIFeatureClick('reconciliation')}
-            className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 hover:bg-gray-650' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'} cursor-pointer transition-colors duration-200`}
-          >
-            <div className="flex items-center mb-2">
-              <DollarSign className={`w-5 h-5 mr-2 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
-              <h3 className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>Auto-Reconciliation</h3>
-            </div>
-            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              Match incoming payments to tenants using AI pattern recognition
-            </p>
-          </div>
-          
-          <div 
-            onClick={() => handleAIFeatureClick('allocation')}
-            className={`p-4 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 hover:bg-gray-650' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'} cursor-pointer transition-colors duration-200`}
-          >
-            <div className="flex items-center mb-2">
-              <Building2 className={`w-5 h-5 mr-2 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
-              <h3 className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>Property Allocation</h3>
-            </div>
-            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-              Match tenants to properties based on preferences and requirements
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Active AI Component */}
-      {activeComponent && (
-        <div className={`rounded-lg shadow ${isDark ? 'bg-gray-800' : 'bg-white'} p-4 mb-6`}>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-              {activeComponent === 'healthScore' && 'Tenant Health Score'}
-              {activeComponent === 'reconciliation' && 'Payment Auto-Reconciliation'}
-              {activeComponent === 'allocation' && 'Property Allocation Engine'}
-            </h2>
-            <button 
-              onClick={handleCloseAIComponent}
-              className={`p-2 rounded-full ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          
-          {activeComponent === 'healthScore' && (
-            <HealthScoreModule 
-              tenant={mockTenant}
-              payments={mockPayments}
-              onRecommendationClick={handleRecommendationClick}
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            <PaymentMonitoringEngine
+              tenants={tenants}
+              onActionRequired={handlePaymentAction}
             />
-          )}
-          
-          {activeComponent === 'reconciliation' && (
-            <ReconciliationEngine 
-              unprocessedPayments={mockUnprocessedPayments}
-              tenants={[mockTenant]}
-              onPaymentReconciled={(payment: any, tenantId: string) => {
-                console.log(`Payment ${payment.id} reconciled to tenant ${tenantId}`);
-                setMockUnprocessedPayments(prev => 
-                  prev.filter(p => p.id !== payment.id)
-                );
-                
-                // Track the event
-                Analytics.trackEvent('payment_reconciled', {
-                  paymentId: payment.id,
-                  tenantId: tenantId
-                });
-              }}
-              onPaymentFlagged={(payment: any, reason: string) => {
-                console.log(`Payment ${payment.id} flagged: ${reason}`);
-                
-                // Track the event
-                Analytics.trackEvent('payment_flagged', {
-                  paymentId: payment.id,
-                  reason: reason
-                });
-              }}
-            />
-          )}
-          
-          {activeComponent === 'allocation' && (
-            <div className="p-6 text-center">
-              <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                Property Allocation Engine
-              </p>
-              <p className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Please navigate to the Properties section to use the allocation engine
-              </p>
+            
+            <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-md`}>
+              <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Recent Activity
+              </h2>
+              <div className="space-y-4">
+                {notifications.slice(0, 5).map(notification => (
+                  <div
+                    key={notification.id}
+                    className={`p-3 rounded-lg flex items-start space-x-3 ${
+                      isDark ? 'bg-gray-700' : 'bg-gray-50'
+                    }`}
+                  >
+                    <Bell className={`w-5 h-5 ${
+                      notification.severity === 'high' ? 'text-red-500' :
+                      notification.severity === 'medium' ? 'text-yellow-500' :
+                      'text-green-500'
+                    }`} />
+                    <div>
+                      <p className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {notification.message}
+                      </p>
+                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {new Date(notification.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
-      )}
-      
-      {/* Chart Navigator */}
-      <div className={`rounded-lg shadow ${isDark ? 'bg-gray-800' : 'bg-white'} p-4`}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            {charts[currentChart].title}
-          </h2>
-          <div className="flex space-x-2">
-            <button 
-              onClick={prevChart}
-              className={`p-2 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
-            >
-              <ChevronLeft className={`w-5 h-5 ${isDark ? 'text-white' : 'text-gray-700'}`} />
-            </button>
-            <button 
-              onClick={nextChart}
-              className={`p-2 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
-            >
-              <ChevronRight className={`w-5 h-5 ${isDark ? 'text-white' : 'text-gray-700'}`} />
-            </button>
           </div>
-        </div>
-        <div className="h-[400px]">
-          {charts[currentChart].component}
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <LandlordFundSweep
+              tenants={tenants}
+              onSweepComplete={handleSweepComplete}
+            />
+
+            <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-md`}>
+              <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Quick Actions
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => navigate('/tenants')}
+                  className={`p-4 rounded-lg flex flex-col items-center space-y-2 ${
+                    isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  <Users className="w-6 h-6 text-blue-500" />
+                  <span className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Manage Tenants
+                  </span>
+                </button>
+                <button
+                  onClick={() => navigate('/payments')}
+                  className={`p-4 rounded-lg flex flex-col items-center space-y-2 ${
+                    isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  <DollarSign className="w-6 h-6 text-green-500" />
+                  <span className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    View Payments
+                  </span>
+                </button>
+                <button
+                  onClick={() => navigate('/properties')}
+                  className={`p-4 rounded-lg flex flex-col items-center space-y-2 ${
+                    isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  <Home className="w-6 h-6 text-purple-500" />
+                  <span className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Properties
+                  </span>
+                </button>
+                <button
+                  onClick={() => navigate('/wallet')}
+                  className={`p-4 rounded-lg flex flex-col items-center space-y-2 ${
+                    isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  <Wallet className="w-6 h-6 text-orange-500" />
+                  <span className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Wallet
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
